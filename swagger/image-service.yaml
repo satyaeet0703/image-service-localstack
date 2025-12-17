@@ -1,0 +1,124 @@
+openapi: 3.0.1
+info:
+  title: Image Upload Service
+  description: Instagram-like image upload service using S3 pre-signed URLs
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:4566/restapis/{apiId}/dev/_user_request_
+    variables:
+      apiId:
+        default: local
+
+paths:
+  /images/upload-url:
+    post:
+      summary: Generate pre-signed URL for image upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UploadRequest'
+      responses:
+        '200':
+          description: Upload URL generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+
+  /images:
+    get:
+      summary: List images
+      parameters:
+        - in: query
+          name: user_id
+          schema:
+            type: string
+        - in: query
+          name: visibility
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of images
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImageMetadata'
+
+  /images/{id}:
+    get:
+      summary: Get image download URL
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Download URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DownloadResponse'
+
+    delete:
+      summary: Delete image
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image deleted
+
+components:
+  schemas:
+    UploadRequest:
+      type: object
+      required: [user_id, content_type]
+      properties:
+        user_id:
+          type: string
+        content_type:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        visibility:
+          type: string
+          example: public
+
+    UploadResponse:
+      type: object
+      properties:
+        image_id:
+          type: string
+        upload_url:
+          type: string
+
+    DownloadResponse:
+      type: object
+      properties:
+        download_url:
+          type: string
+
+    ImageMetadata:
+      type: object
+      properties:
+        image_id:
+          type: string
+        user_id:
+          type: string
+        created_at:
+          type: string
+        visibility:
+          type: string
