@@ -40,12 +40,12 @@ awslocal dynamodb create-table \
 
 # Create Lambda
 zip -j /tmp/function.zip \
-  /lambda/handler.py \
-  /lambda/upload.py \
-  /lambda/list_images.py \
-  /lambda/get_image.py \
-  /lambda/delete_image.py \
-  /lambda/config.py
+  /lambdas/handler.py \
+  /lambdas/upload.py \
+  /lambdas/list_images.py \
+  /lambdas/get_image.py \
+  /lambdas/delete_image.py \
+  /lambdas/config.py
 
 awslocal lambda create-function \
   --function-name image-service-lambda \
@@ -148,7 +148,7 @@ awslocal apigateway create-deployment \
 echo "Adding S3 event notification..."
 
 
-zip -j /tmp/upload_complete.zip /lambda/upload_complete.py /lambda/config.py
+zip -j /tmp/upload_complete.zip /lambdas/upload_complete.py /lambdas/config.py
 
 awslocal lambda create-function \
   --function-name upload-complete-lambda \
@@ -200,3 +200,5 @@ awslocal s3api get-bucket-notification-configuration \
 
 echo $API_ID
 echo "LocalStack initialized"
+
+

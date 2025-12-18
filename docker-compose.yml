@@ -8,13 +8,13 @@ services:
       - "4566:4566"
     environment:
       - SERVICES=lambda,apigateway,s3,dynamodb,iam,logs
-      - AWS_DEFAULT_REGION=us-east-1
+      - AWS_DEFAULT_REGION=ap-south-1
       - LOCALSTACK_HOST=localhost
       - HOSTNAME_EXTERNAL=localhost
       - S3_HOSTNAME_EXTERNAL=localhost
     volumes:
       - ./localstack:/etc/localstack/init/ready.d
-      - ./lambda:/lambda
+      - ./lambdas:/lambdas
       - /var/run/docker.sock:/var/run/docker.sock
 
   swagger-ui:
