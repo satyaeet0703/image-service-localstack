@@ -1,7 +1,9 @@
 import json
 import boto3
 from botocore.exceptions import ClientError
-from .config import *
+from config import *
+from utils import success, error
+PORT = os.environ.get("X_PORT", "4566")
 
 
 s3 = boto3.client(
@@ -27,7 +29,7 @@ def get_image(event):
         item = response.get("Item")
 
         if not item:
-            return _error_response(404, "Image not found")
+            return error(404, "Image not found")
 
         if item.get("status") != "INIT" and item.get("s3_key"):
             download_url = s3.generate_presigned_url(
@@ -38,29 +40,16 @@ def get_image(event):
                 },
                 ExpiresIn=3600
             )
-        else:
-            return _error_response(400, "Image not uploaded yet")
+            download_url = LOCALSTACK_P + download_url.split(PORT)[-1]
 
-        return {
-            "statusCode": 200,
-            "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"download_url": download_url})
-        }
+        else:
+            return error(400, "Image not uploaded yet")
+
+
+        return success(200, {"download_url": download_url})
 
     except ClientError as e:
-        return _error_response(500, "AWS error", str(e))
+        return error(500, "AWS error", str(e))
 
     except Exception as e:
-        return _error_response(500, "Internal server error", str(e))
-
-
-def _error_response(status, message, detail=None):
-    payload = {"message": message}
-    if detail:
-        payload["detail"] = detail
-
-    return {
-        "statusCode": status,
-        "headers": {"Content-Type": "application/json"},
-        "body": json.dumps(payload)
-    }
+        return error(500, "Internal server error", str(e))

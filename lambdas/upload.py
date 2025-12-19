@@ -5,7 +5,8 @@ from datetime import datetime
 
 import boto3
 from botocore.exceptions import ClientError
-from .config import *
+from config import *
+from utils import success, error
 PORT = os.environ.get("X_PORT", "4566")
 
 
@@ -69,40 +70,25 @@ def generate_upload_url(event):
         #### for debug
         upload_url = LOCALSTACK_P+upload_url.split(PORT)[1]
 
-        return {
-            "statusCode": 200,
-            "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({
+
+        return success(200, {
                 "image_id": image_id,
                 "upload_url": upload_url,
                 "curl_debug": "curl -X PUT -H 'Content-Type: image/jpeg'  --data-binary '@test.jpg' '"+upload_url+"'",
                 "expires_in": 300
             })
-        }
 
     except KeyError as e:
-        return _error_response(
+        return error(
             400, f"Missing required field: {str(e)}"
         )
 
     except ClientError as e:
-        return _error_response(
+        return error(
             500, "AWS service error", str(e)
         )
 
     except Exception as e:
-        return _error_response(
+        return error(
             500, "Internal server error", str(e)
         )
-
-
-def _error_response(status, message, detail=None):
-    payload = {"message": message}
-    if detail:
-        payload["detail"] = detail
-
-    return {
-        "statusCode": status,
-        "headers": {"Content-Type": "application/json"},
-        "body": json.dumps(payload)
-    }

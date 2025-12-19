@@ -1,7 +1,8 @@
 import json
 import boto3
 from botocore.exceptions import ClientError
-from .config import *
+from config import *
+from utils import success, error
 
 s3 = boto3.client(
     "s3",
@@ -26,7 +27,7 @@ def delete_image(event):
         item = response.get("Item")
 
         if not item:
-            return _error_response(404, "Image not found")
+            return error(404, "Image not found")
 
         # Delete from S3
         s3.delete_object(
@@ -37,26 +38,12 @@ def delete_image(event):
         # Delete metadata
         table.delete_item(Key={"image_id": image_id})
 
-        return {
-            "statusCode": 200,
-            "headers": {"Content-Type": "application/json"},
-            "body": json.dumps({"message": "Image deleted successfully"})
-        }
+        return success(200, {"message": "Image deleted successfully"})
 
     except ClientError as e:
-        return _error_response(500, "AWS error", str(e))
+        return error(500, "AWS error", str(e))
 
     except Exception as e:
-        return _error_response(500, "Internal server error", str(e))
+        return error(500, "Internal server error", str(e))
 
 
-def _error_response(status, message, detail=None):
-    payload = {"message": message}
-    if detail:
-        payload["detail"] = detail
-
-    return {
-        "statusCode": status,
-        "headers": {"Content-Type": "application/json"},
-        "body": json.dumps(payload)
-    }

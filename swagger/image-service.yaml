@@ -83,18 +83,20 @@ components:
   schemas:
     UploadRequest:
       type: object
-      required: [user_id, content_type]
+      required: [user_id, content_type, visibility]
       properties:
         user_id:
           type: string
         content_type:
           type: string
+          enum: ["image/jpeg", "image/jpg"]
         tags:
           type: array
           items:
             type: string
         visibility:
           type: string
+          enum: ["private", "public"]
           example: public
 
     UploadResponse:

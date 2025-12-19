@@ -45,7 +45,8 @@ zip -j /tmp/function.zip \
   /lambdas/list_images.py \
   /lambdas/get_image.py \
   /lambdas/delete_image.py \
-  /lambdas/config.py
+  /lambdas/config.py \
+  /lambdas/utils.py
 
 awslocal lambda create-function \
   --function-name image-service-lambda \
@@ -139,6 +140,102 @@ awslocal apigateway put-integration \
   --type AWS_PROXY \
   --integration-http-method POST \
   --uri arn:aws:apigateway:ap-south-1:lambda:path/2015-03-31/functions/arn:aws:lambda:ap-south-1:000000000000:function:image-service-lambda/invocations
+
+
+add_cors_to_method() {
+  local RESOURCE_ID=$1
+  local METHOD=$2
+
+  # Declare headers
+  awslocal apigateway put-method-response \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method $METHOD \
+    --status-code 200 \
+    --response-parameters \
+      "method.response.header.Access-Control-Allow-Origin=true,\
+       method.response.header.Access-Control-Allow-Headers=true,\
+      method.response.header.Access-Control-Allow-Methods=true"
+
+  awslocal apigateway put-integration-response \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method $METHOD \
+    --status-code 200 \
+    --response-parameters '{
+      "method.response.header.Access-Control-Allow-Origin": "'\''*'\''",
+      "method.response.header.Access-Control-Allow-Headers": "'\''Content-Type,Authorization'\''",
+      "method.response.header.Access-Control-Allow-Methods": "'\''GET,POST,DELETE,OPTIONS'\''"
+    }' \
+    || true
+}
+
+declare -A API_METHODS=(
+  ["$IMAGES_ID"]="GET"
+  ["$UPLOAD_ID"]="POST"
+  ["$IMAGE_ID"]="GET DELETE"
+)
+
+
+
+for RESOURCE_ID in "${!API_METHODS[@]}"; do
+  for METHOD in ${API_METHODS[$RESOURCE_ID]}; do
+    add_cors_to_method "$RESOURCE_ID" "$METHOD"
+  done
+done
+
+
+add_cors_to_resource() {
+  local RESOURCE_ID=$1
+
+  echo "Adding CORS to resource $RESOURCE_ID"
+
+  # 1. Create OPTIONS method (idempotent)
+  awslocal apigateway put-method \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method OPTIONS \
+    --authorization-type NONE \
+    || true
+
+  # 2. Method response (declare headers)
+  awslocal apigateway put-method-response \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method OPTIONS \
+    --status-code 200 \
+    --response-parameters \
+      "method.response.header.Access-Control-Allow-Origin=true,\
+       method.response.header.Access-Control-Allow-Headers=true,\
+       method.response.header.Access-Control-Allow-Methods=true" \
+    || true
+
+  # 3. Mock integration
+  awslocal apigateway put-integration \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method OPTIONS \
+    --type MOCK \
+    --request-templates '{"application/json":"{\"statusCode\":200}"}' \
+    || true
+
+  # 4. Integration response (actual header values)
+  awslocal apigateway put-integration-response \
+    --rest-api-id $API_ID \
+    --resource-id $RESOURCE_ID \
+    --http-method OPTIONS \
+    --status-code 200 \
+    --response-parameters '{
+      "method.response.header.Access-Control-Allow-Origin": "'\''*'\''",
+      "method.response.header.Access-Control-Allow-Headers": "'\''Content-Type,Authorization'\''",
+      "method.response.header.Access-Control-Allow-Methods": "'\''GET,POST,DELETE,OPTIONS'\''"
+    }' \
+    || true
+}
+
+for RESOURCE_ID in $IMAGES_ID $IMAGE_ID $UPLOAD_ID; do
+  add_cors_to_resource $RESOURCE_ID
+done
 
 
 awslocal apigateway create-deployment \
