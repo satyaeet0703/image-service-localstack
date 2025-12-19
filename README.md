@@ -11,6 +11,17 @@ Swagger UI is available at:
 http://localhost:8080
 
 Note:
-- Replace `{apiId}` in the server URL with the actual API ID printed in LocalStack logs.
+- Replace `{apiId}` in the server URL with the actual API ID printed in LocalStack logs(docker-compose logs -f localstack).
 - Example base URL:
-  http://localhost:4566/restapis/abc123/dev/_user_request_
+  http://localhost:4566/restapis/apiid/dev/_user_request_
+
+
+## UPLOAD FLOW
+
+![Async Notification](diagrams/uploadflow.jpg)
+---
+
+## Architecture Overview
+
+![API Architecture](diagrams/api.jpg)
+
