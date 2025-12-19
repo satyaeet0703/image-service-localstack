@@ -1,5 +1,6 @@
 import boto3
 import pytest
+import sys
 from moto import mock_dynamodb, mock_s3
 from botocore.exceptions import ClientError
 
@@ -8,6 +9,7 @@ TABLE_NAME = "ImagesMetadata-test4"
 BUCKET = "test-bucket-4"
 
 import os
+sys.path.insert(0, os.path.abspath("lambdas"))
 
 os.environ["AWS_ACCESS_KEY_ID"] = "test"
 os.environ["AWS_SECRET_ACCESS_KEY"] = "test"
