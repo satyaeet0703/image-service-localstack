@@ -26,3 +26,4 @@ services:
       SWAGGER_JSON: /swagger/image-service.yaml
     volumes:
       - ./swagger:/swagger
+

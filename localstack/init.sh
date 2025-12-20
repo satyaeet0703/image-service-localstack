@@ -297,5 +297,3 @@ awslocal s3api get-bucket-notification-configuration \
 echo "Copy API_ID to use it for swagger ->>"
 echo $API_ID
 echo "LocalStack initialized"
-
-
