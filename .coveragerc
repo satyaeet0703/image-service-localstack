@@ -1,0 +1,3 @@
+[run]
+omit =
+    lambdas/handler.py

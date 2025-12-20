@@ -34,3 +34,4 @@ def test_delete_image_not_found(aws_env):
     response = delete_image(event)
 
     assert response["statusCode"] == 404
+
